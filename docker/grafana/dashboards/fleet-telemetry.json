@@ -1,0 +1,118 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "graphTooltip": 1,
+  "title": "Fleet Telemetry",
+  "uid": "fleet-telemetry",
+  "tags": ["fleet", "kafka", "timescale"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "5s",
+  "time": { "from": "now-15m", "to": "now" },
+  "templating": { "list": [] },
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "Ingest pipeline (rows/s)",
+      "gridPos": { "h": 9, "w": 16, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "unit": "ops", "custom": { "drawStyle": "line", "fillOpacity": 10 } },
+        "overrides": []
+      },
+      "targets": [
+        { "refId": "A", "expr": "rate(telemetry_pings_consumed_total[1m])", "legendFormat": "consumed" },
+        { "refId": "B", "expr": "rate(telemetry_pings_inserted_total[1m])", "legendFormat": "inserted" },
+        { "refId": "C", "expr": "rate(telemetry_pings_duplicate_total[1m])", "legendFormat": "duplicate" },
+        { "refId": "D", "expr": "rate(telemetry_pings_invalid_total[1m])", "legendFormat": "invalid" }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Totals",
+      "gridPos": { "h": 9, "w": 8, "x": 16, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "targets": [
+        { "refId": "A", "expr": "telemetry_pings_consumed_total", "legendFormat": "consumed" },
+        { "refId": "B", "expr": "telemetry_pings_inserted_total", "legendFormat": "inserted" },
+        { "refId": "C", "expr": "telemetry_pings_duplicate_total", "legendFormat": "duplicate" },
+        { "refId": "D", "expr": "telemetry_pings_invalid_total", "legendFormat": "invalid" }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Store latency (s)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 9 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "unit": "s", "custom": { "drawStyle": "line", "fillOpacity": 10 } },
+        "overrides": []
+      },
+      "targets": [
+        { "refId": "A", "expr": "histogram_quantile(0.95, sum(rate(telemetry_ping_store_seconds_bucket[5m])) by (le))", "legendFormat": "p95" },
+        { "refId": "B", "expr": "histogram_quantile(0.50, sum(rate(telemetry_ping_store_seconds_bucket[5m])) by (le))", "legendFormat": "p50" }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "gauge",
+      "title": "Latest-cache hit ratio",
+      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 9 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "unit": "percentunit", "min": 0, "max": 1 },
+        "overrides": []
+      },
+      "targets": [
+        { "refId": "A", "expr": "sum(rate(telemetry_latest_cache_total{result=\"hit\"}[5m])) / clamp_min(sum(rate(telemetry_latest_cache_total[5m])), 1)", "legendFormat": "hit ratio" }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Cache lookups (ops/s)",
+      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 9 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "unit": "ops", "custom": { "drawStyle": "line", "fillOpacity": 10 } },
+        "overrides": []
+      },
+      "targets": [
+        { "refId": "A", "expr": "sum by (result) (rate(telemetry_latest_cache_total[1m]))", "legendFormat": "{{result}}" }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "API requests (req/s by status)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 17 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "unit": "reqps", "custom": { "drawStyle": "line", "fillOpacity": 10 } },
+        "overrides": []
+      },
+      "targets": [
+        { "refId": "A", "expr": "sum by (status) (rate(telemetry_http_requests_total[1m]))", "legendFormat": "{{status}}" }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "API latency p95 (s by route)",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 17 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "unit": "s", "custom": { "drawStyle": "line", "fillOpacity": 10 } },
+        "overrides": []
+      },
+      "targets": [
+        { "refId": "A", "expr": "histogram_quantile(0.95, sum by (le, route) (rate(telemetry_http_request_seconds_bucket[5m])))", "legendFormat": "{{route}}" }
+      ]
+    }
+  ]
+}
