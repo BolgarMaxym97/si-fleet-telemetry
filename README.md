@@ -1,6 +1,6 @@
 # si-fleet-telemetry
 
-Downstream of [`si-fleet-mqtt-bridge`](../si-fleet-mqtt-bridge): consumes vehicle
+Downstream of [`si-fleet-mqtt-bridge`](https://github.com/BolgarMaxym97/si-fleet-mqtt-bridge): consumes vehicle
 geo-telemetry from Kafka (`vehicle.pings`), stores it in **TimescaleDB**, caches
 the latest position per vehicle in **Redis**, and serves a read **API**.
 
