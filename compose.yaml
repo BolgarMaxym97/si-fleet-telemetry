@@ -29,6 +29,10 @@ services:
     ports:
       - "8081:8000"           # API (8080 is taken by the bridge's kafka-ui)
     env_file: .env
+    environment:
+      PHP_IDE_CONFIG: "serverName=fleet"   # matches the PhpStorm server name
+    extra_hosts:
+      - "host.docker.internal:host-gateway"   # Xdebug callback target
     volumes:
       - .:/var/www/html       # live code (vendor + ext baked in the image)
     networks: [default, shared]   # shared: scraped by the bridge's Prometheus
@@ -43,6 +47,10 @@ services:
     build: .
     command: ["php", "artisan", "kafka:consume-pings"]
     env_file: .env
+    environment:
+      PHP_IDE_CONFIG: "serverName=fleet"   # matches the PhpStorm server name
+    extra_hosts:
+      - "host.docker.internal:host-gateway"   # Xdebug callback target
     volumes:
       - .:/var/www/html
     networks: [default, shared]   # shared: reach kafka:9092

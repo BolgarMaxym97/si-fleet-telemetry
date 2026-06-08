@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use Anthropic\Client;
+use App\Application\Assistant\AssistantTools;
+use App\Application\Contracts\AssistantInterface;
 use App\Application\Contracts\LatestPositionCacheInterface;
 use App\Application\Contracts\PingRepositoryInterface;
+use App\Infrastructure\Assistant\ClaudeAssistant;
 use App\Infrastructure\Cache\RedisLatestPositionCache;
 use App\Infrastructure\Persistence\EloquentPingRepository;
 use Illuminate\Support\ServiceProvider;
@@ -18,6 +22,17 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->bind(PingRepositoryInterface::class, EloquentPingRepository::class);
         $this->app->bind(LatestPositionCacheInterface::class, RedisLatestPositionCache::class);
+
+        // The assistant talks to Claude. Bound lazily — only resolved when the
+        // /assistant endpoint is hit, so the SDK + API key aren't needed by the
+        // consumer process or the test suite (which binds a fake).
+        $this->app->bind(AssistantInterface::class, function ($app): ClaudeAssistant {
+            return new ClaudeAssistant(
+                client: new Client(apiKey: (string) config('services.anthropic.key')),
+                tools: $app->make(AssistantTools::class),
+                model: (string) config('services.anthropic.model'),
+            );
+        });
 
         // Redis-backed registry: the `consumer` and `app` run as separate
         // processes, so metrics must live in shared storage, not process memory.
